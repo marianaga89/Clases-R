@@ -1,0 +1,297 @@
+---
+title: <span style="color:#A94E4E">Introducción a R Clase 3</span>
+author: <span style="color:#A94E4E">Mariana Godina Abasolo</span>
+date: <span style="color:#A94E4E">Marzo 3, 2017</span>
+output: html_notebook
+---
+
+La visualización de datos es una herramienta importante para esta generación, es poco frecuente que los datos que se desean analizar se ordenen de la manera más útil para nuestros propósitos.Muchas veces se necesita crear nuevas variables o hacer un resumen, o incluso sólo se quiere renombrar las variables o reordenar las observaciones para que sea más fácil trabajar con ellas. En esta clase se va a aprender como hacer todo esto. Se enseñará cómo transformar los datos usando el paquete <b> dplyr </b> y la base de datos de vuelos que salieron de NY (EWR, JFK y LGA) en 2013.
+
+Las base de datos de los vuelos tiene información complementaria de el clima, aerolíneas, aviones y aeropuertos.
+
+```{r, message=FALSE, warning=FALSE}
+#install.packages('nycflights13')
+library(nycflights13)
+?flights
+head(flights)
+```
+
+
+El paquete se compone de 5 tablas:
+
+* `flight`: información de los vuelos.
+* `weather`: datos meteorológicos por hora por aeropuerto.
+* `planes`: información de construcción de cada avión.
+* `airports`: localización y nombre de aeropuertos.
+* `airlines`: codigos de nombre de aerolínea.
+Total de vuelos: 336,776.
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+Las funciones que se van a ver son:
+
+* Escoger observationes `filter()`
+* Reordenar filas `arrange()`
+* Elegir variables por su nombre `select()`
+* Crear nuevas variables con funciones de variables existentes `mutate()`
+* Colapsar varios valores hatsa un solo resumen `summarize()`
+* Cambia el alcance para no trabajar con todos los datos `group_by()`
+
+Todas las funciones trabajan parecido:
+
+1. El primer argumento es el set de datos
+2. EL siguiente argumento es la variable (sin comillas)
+3. El resultado es un nuevo `data frame`
+
+
+## filter()
+
+Filtrar una base de datos dependiendo de una condición requiere la función `filter()` que tiene los siguientes argumentos `dplyr::filter(data, condition)`.
+
+```{r}
+library(magrittr)
+library(dplyr)
+filter(flights,origin == "LGA")
+flights %>% filter(dest == 'MIA')
+flights %>% filter(dest == 'MIA', origin=="LGA")
+```
+
+Operadores importantes para filtrar
+
+```{r, eval=FALSE, include=TRUE}
+x > 1
+x >= 1
+x < 1
+x <= 1
+x != 1
+x == 1
+x %in% c("a", "b")
+
+# Conjuntos
+a | b
+a & b
+a & !b
+xor(a, b)
+```
+
+<br>
+
+<img src="filter-conds.png" width="900px"/>
+
+<br>
+
+```{r}
+flights %>% filter(arr_delay>60)
+flights %>% filter(month == 11 | month == 12)
+flights %>% filter(month %in% c(11,12))
+```
+
+####Ejercicio
+
+1. Encuentra todos los vuelos que:
+  a. Tuvieron que se retrasaron 2 o más horas
+  b. Volaron a Houston (IAH o HOU)
+  c. Fueron operados por Unites, American o Delta
+  d. Llegaron 2 horas tarde pero no salieron tarde
+  g. Salieron entre la medianoche y 6 a.m.
+  
+2. Probar la función `between()` en el ejercicio 1g (investigar como)
+
+3. ¿Cuántos vuelos tienen valores faltantes (NA) en la variable *dep_time*?
+
+
+## arrange()
+
+`arrange()` cambia el orden de las filas. Toma un `data frame` y un set de columnas para ordenar.
+`dplyr::arrange(data, variables_por_las_que_ordenar)` 
+La función `desc()` permite que se ordene de forma descendiente`
+
+```{r}
+flights %>% arrange(dep_time)
+flights %>% arrange(dep_time, dep_delay)
+flights %>% arrange(desc(dep_time), dep_delay)
+flights %>% arrange(desc(dep_time), desc(dep_delay))
+```
+
+#### Ejercicio
+
+1. ¿Cómo usarías `arrange()` para que los valores faltantes estén al principio?
+
+2. Encuentra los vuelos que se retrasaron más
+
+3. ¿Qué vuelos volaron más tiempo? ¿Cuáles volaron menos tiempo?
+
+## select()
+
+`select()` selecciona las columnas con las que se quiere trabajar. `dplyr::select(data, seq_variables)`.
+
+```{r}
+flights %>% select(dep_time, dep_delay, arr_time, arr_delay)
+flights %>% select(-(year:day))
+```
+
+También, existen funciones que se usan exclusivamente en select():
+
+* `starts_with(x, ignore.case = TRUE)`: los nombres empiezan con x.
+* `ends_with(x, ignore.case = TRUE)`: los nombres terminan con x.
+* `contains(x, ignore.case = TRUE)`: selecciona las variable que contengan x.
+* `matches(x, ignore.case = TRUE)`: selecciona las variable que igualen la expresión regular x.
+* `num_range("x", 1:5, width = 2)`: selecciona las variables (numericamente) de x01 a x05.
+* `everything()`: selecciona todas las variables.
+* `one_of("x", "y", "z")`: selecciona las variables que esten en un vector de caracteres.
+```{r}
+flights %>% select(contains("dep"))
+```
+
+
+#### Ejercicio
+
+1. Todas las maneras posibles de seleccionar `dep_time`, `dep_delay`, `arr_time` y `arr_delay`
+
+2. ¿Qué pasa si pones más de 1 vez la misma variable en `select()`
+
+## mutate()
+
+Agrega nuevas columnas al `data frame` a partir de las ya existentes `dplyr::mutate(data, nuevas_variables = operaciones)`:
+
+```{r}
+flights %>% select(year:day, 
+                   ends_with("delay"),
+                   distance,
+                   air_time) %>%
+              mutate(gain = arr_delay - dep_delay,
+                     speed = distance / air_time*60)  
+
+```
+
+Se puede sólo quedarse con las nuevas variables con `transmute()`
+
+```{r}
+flights %>% select(year:day, 
+                   ends_with("delay"),
+                   distance,
+                   air_time) %>%
+              transmute(gain = arr_delay - dep_delay,
+                        speed = distance / air_time*60,
+                        hours = air_time / 60,
+                        gain_per_hour = gain/hours)  
+```
+
+#### Ejercicio
+
+1. Convertir la variable `distance` de milla a km
+
+## summarize()
+
+Reduce variables a valores (crear nuevas bases de datos). 
+
+`dplyr::summarise(data, nuevas_variables = operaciones)`
+
+```{r}
+flights %>% summarize(delay = mean(dep_delay, na.rm = TRUE))
+```
+
+```{r}
+library(ggplot2)
+flights %>% group_by(year, month) %>% 
+              summarize(delay=mean(dep_delay, na.rm = TRUE))
+
+delay_month <- flights %>% group_by(year, month) %>% 
+              summarize(delay=mean(dep_delay, na.rm = TRUE))
+
+theme_set(theme_bw())
+ggplot(delay_month, aes(x=factor(month), y=delay, group = 1))+
+  geom_point() + geom_line()
+
+ggplot(delay_month, aes(x=factor(month), y=delay, group = 1))+
+  geom_point() + geom_line() +
+  xlab("Month")
+
+ggplot(delay_month, aes(x=factor(month), y=delay, fill = factor(month)))+
+  geom_bar(stat = "identity",position = "dodge")+
+  xlab("Month")
+```
+
+#### Ejercicio
+
+1. Crear este `data frame` y gráficarlo. ¿En qué mes hay más vuelos?
+Hint(n = n())
+
+```{r, echo=FALSE}
+flights %>% group_by(month) %>% summarize(vuelos = n())
+```
+
+2. Del mes en el que registra el mayor número de vuelos, ¿Qué día es el de mayor número de vuelos?
+
+----
+
+En esta sección se desarrollará cómo organizar los datos empleando el paquete <b> tidyr </b>. 
+Se consideran tres reglas relacionadas entre sí que hacen una base de datos ordenada:
+
+1. Cada variable tiene que tener su propia columna
+
+2. Cada observación debe tener su propia fila
+
+3. Cada valor tiene que tener su propia celda 
+
+Las funciones que se van a ver son:
+
+* `gather()`: junta columnas en renglones. También se le conoce como melt, derretir la base. Recibe múltiples columnas y las junta en pares de nombres y valores, convierte los datos anchos en largos.
+`tidyr::gather(data, key = name_variablelabel, value = name_valuelabel, select_columns)`
+
+* `spread()`: separa renglones en columnas. Recibe dos columnas y las separa, haciendo los datos más anchos.
+`tidyr::spread(data, key = name_variablelabel, value = name_valuelabel)`
+
+* `unite()`:  une varias columnas en una sola.
+`tidyr::unite(data, col = name_variabletoseparate, into=name, sep = "_", remove = TRUE)`
+
+* `separate()`: separa una columna en varias columnas.
+`tidyr::separate(data, col = name_variabletoseparate, into = c(vector with names using ""), sep)`
+
+Usaremos en paquete `install.packages(ggplot2movies)`
+
+```{r}
+library(ggplot2movies)
+head(movies)
+```
+
+## gather()
+
+<br>
+
+<img src="tidy_gather.png" width="900px"/>
+
+<br>
+
+```{r}
+tidy1 <- movies %>% gather(Action:Short, key = "class", value = "boolean")
+head(tidy1)
+
+tidy2 <- tidy1 %>% select(title, year, length, rating, class, boolean)
+head(tidy2)
+
+tidy3 <- tidy2 %>% filter(boolean>0) %>% select(title:class) %>% arrange(desc(rating))
+head(tidy3)
+
+tidy3 %>% group_by(class) %>% summarize(rating2 = mean(rating, na.rm=TRUE)) %>% arrange(desc(rating2))
+
+ggplot(tidy3, aes(x=factor(class), y = rating, fill = factor(class))) +
+  geom_boxplot() + scale_fill_brewer(name="class")+ xlab("class")
+```
+
+## spread()
+
+<br>
+
+<img src="tidy_spread.png" width="900px"/>
+
+<br>
+
+```{r}
+tidy4 <- tidy2 %>% spread(key = class, value = boolean)
+head(tidy4)
+```
+
+
