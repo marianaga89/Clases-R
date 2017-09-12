@@ -1,0 +1,416 @@
+---
+title: <span style="color:#A94E4E">Introducción a R Clase 2</span>
+author: "Mariana Godina Abasolo"
+date: "February 24, 2017"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+### Listas
+
+Al contrario de los vectores, en los cuales todos los elementos tienen que ser del mismo modo, las listas en R pueden combinar objetos de diferentes tipos. Es la base para los `data frames` y la programación orientada a objetos. 
+La selección de elementos es similar a la de vectores y matrices. 
+
+#### Creación de listas
+Para este ejemplo se considera la información de un empleado. Para cada empleado se desea almacenar el nombre, salario y un indicador booleano que indique si el empleado lleva más de 3 años en la empresa. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+l <- list(nombre = "Luis", salario = 10000, tiempo = T)
+l
+```
+
+Los nombres en las variables son opcionales.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+l <- list("Luis", 10000, T)
+l
+```
+
+Generalmente se considera más claro y menos propenso a errores usar nombres que los índices numéricos. 
+
+Como las listas son vectores, se pueden crear como tal. 
+
+```{r}
+z <- vector(mode = "list")
+z[["nombre"]] <- "Rodrigo"
+z
+```
+
+#### Selección de elementos del vector
+
+Un elemento en específico
+
+```{r}
+l <- list(nombre = "Luis", salario = 10000, tiempo = T)
+l$salario
+l[["salario"]]
+l[[2]]
+l[2]
+```
+
+#### Añadir y eliminar elementos de la lista
+
+```{r}
+z <- list(a = "hola", b = 58)
+z
+z$c <- "Karen"
+z
+z[[4]] <- 28
+z[5:7] <- c(FALSE, TRUE, TRUE)
+z
+z$b <- NULL
+z
+z[c(1,2)] <- NULL
+z
+```
+
+Se pueden crear listas concatenando
+
+```{r}
+c(list("Jorge", 15000, T), list(5))
+```
+
+Tamaño de la lista
+
+```{r}
+length(l)
+```
+
+Nombres dentro de la lista
+
+```{r}
+names(l)
+```
+
+Obtener los valores de la lista
+
+```{r}
+unlist(l)
+```
+
+### Data Frames
+
+Los `data frames` tienen dos dimensiones: filas y columnas. Cada columna puede consistir en números, caracteres u otros. 
+
+#### Creación de listas
+
+Para este ejemplo se considera estudiantes y sus calificaciones.
+
+```{r}
+estudiantes <- c("uno", "dos", "tres")
+calif <- c(8, 7, 9)
+datos <- data.frame(estudiantes, calif)
+datos
+```
+
+#### Selección de datos del data frame
+
+Los datos se pueden extraer al igual que la lista.
+
+```{r}
+datos[[1]]
+datos$calif
+```
+
+También se pueden tratar como matrices
+
+```{r}
+datos[,1]
+datos[1,]
+```
+
+Nombres de columnas
+
+```{r}
+str(datos)
+datos$estudiantes <- as.character(datos$estudiantes)
+str(datos)
+names(datos)
+names(datos) <- c('estud', 'cali')
+datos
+nrow(datos)
+ncol(datos)
+```
+
+### Programar `for`, `if`, `while` y funciones
+
+#### For
+
+```
+for(variable in secuencia){ 
+  hacer algo
+}
+```
+##### Ejemplos
+
+```{r}
+for(i in 1:5)
+  print(i)
+
+s <- c('Casa', "Escuela", "Oficina", "Cine")
+for(i in s)
+  print(i)
+
+for (i in 1:5) {
+  h <- i*2
+  print(h)
+}
+```
+
+#### If
+
+```
+if(condición){ 
+  hacer algo
+}
+
+if(condición){ 
+  hacer algo
+}else{
+  hacer algo diferente 
+}
+
+ifelse(condición,regresa valores si cumple,regresa valores si no cumple)
+```
+
+##### Ejemplos
+
+```{r}
+i <- 5
+if(i>3)
+  print('Sí')
+
+if(i>3){
+  i <- i+5
+  print(i)
+}else{
+  print(i)
+}
+
+j <- TRUE
+if(j)
+  print(j)
+
+i <- 5
+ifelse(i==4,print('Sí'),i)
+```
+
+#### While
+
+```
+while(condición){
+  hacer algo
+}
+```
+##### Ejemplo
+
+```{r}
+i <- 1
+while (i<6) {
+  print(i)
+  i <- i + 1
+}
+```
+
+
+#### Funciones
+
+```
+nombre_función <- function(var){
+  hacer algo
+  return(nueva_variable)
+}
+```
+
+##### Ejemplo
+
+```{r}
+timestwo <- function(x){
+  y <- x*2
+  return(y)
+}
+```
+
+#### Ejercicios
+
+- Hacer un `data frame` de 5 filas y 3 columnas 
+- Cambiar nombre a las variables de los datos anteriores 
+- Hacer un nuevo `data frame` con las filas 1, 3 y 5 
+- Hacer un matriz de 3X3 con valores aleatorios usando `for`
+- Hacer una función que reciba un vector y regrese los números pares
+
+```{r}
+#respuesta 1
+u <- c('animal1','animal2','animal3','animal4','animal5')
+d <- c('perro','gato','gato','perro','perro')
+t <- c('H','H','M','H','M')
+dat <- data.frame(u,d,t)
+dat
+#respuesta 2
+names(dat) <- c('id','tipo','sexo')
+#respuesta 3
+dat2 <- dat[c(1,3,5),]
+dat2
+#respuesta 4
+mat <- matrix(nrow = 3, ncol = 3)
+for (i in 1:3) {
+  for (j in 1:3) {
+    mat[i,j] <- runif(1)
+  }
+}
+mat
+#respuesta 5
+pares <- function(vec){
+  pr <- c()
+  for(i in vec){
+   if(i%%2==0)
+     pr <- c(pr,i)
+  }
+  return(pr)
+}
+v <- 1:10
+pares(v)
+```
+
+
+## Introducción análisis de datos
+
+El objetivo de usar R es realizar análisis de datos. En el análisis de datos nos interesan técnicas cuantitativas cómo: recolectar, organizar, entender, interpretar y extraer información de colecciones de datos predominantemente numéricos. Hadley Wickham resume estas tareas en el proceso de análisis en el diagrama siguiente:
+
+![](data-science.png)
+
+### Importar datos
+
+```
+df <- read.csv(file)
+df <- read.delim(file, delim = "|")
+```
+
+```{r}
+lowbwt <- read.table("lowbwt.dat", header=TRUE, quote="\"")
+```
+
+
+### Visualización de datos con ggplot
+
+Para empezar a programar en R la visualización de datos es un buen comienzo. Puedes llegar a hacer gráficas elegantes e iformativas que te ayuden a entender los datos. 
+
+```{r}
+library(tidyverse)
+```
+
+#### ¿Cómo funciona?
+
+Se incluye un conjunto de datos (data.frame), un conjunto de objetos geometricos geom_ en un sistema de coordenadas (x,y).
+
+<img src="ggplot-component1.png" width="350px"/>
+
+<img src="ggplot-component2.png" width="350px"/>
+
+<br>
+
+En `ggplot2` se construye la gráfica agregando diferentes capas o `layers`, diferentes tipos de capas que se trataran en este curso son:
+
+1. Aesthetic: `aes()` propiedades de objetos por mapear en la gráfica (axis x, axis y, size, shape, color, fill).
+
+2. Geoms: `geom_` Objetos geométricos. Estos objetos se dividen en objetos que mapean en una dimensión, dos dimensiones y tres dimensiones.
+
+3. Transformaciones estadísticas: `stat_` Resúmen estadístico de variables.
+
+4. Facets: `facet_` División de gráficas en diferentes paneles o subgráficas.
+
+5. Themes: `theme()` Aspectos de la gráfica independientes de los datos, como: fuente, títulos, posición de leyendas y fondo.
+
+Existen dos funciones para graficar: `ggplot` y `qplot`. Aunque `qplot` es muy sencilla y similar a `plot`, en este curso se pondrá especial antención a la función `ggplot`.
+
+<img src="ggplot_2.png" width="350px"/>
+
+<br>
+
+Se seguirá el siguiente orden para ejemplificar distintas gráficas:
+
+- Gráfica de dispersión
+- Páneles
+- Histogramas
+- Barras
+- Box-plot
+
+#### Gráficas de dispersión (sactterplots)
+
+Para este ejemplo se usa la base de datos `mpg` la cual tiene datos de 38 modelos de autos
+```{r}
+head(mpg)
+summary(mpg)
+str(mpg)
+?mpg
+```
+
+```{r}
+theme_set(theme_bw())
+ggplot(data = mpg, aes(x = displ, y = hwy))+
+  geom_point()
+```
+
+#### Ejercicios
+
+- Correr `ggplot(data = mpg)` 
+- ¿Cuántas filas hay en `mtcars`?¿Cuántas columnas?
+- La variable `drv`, ¿qué describe? (`?mpg)
+- Hacer un scatterplot of `hwy` vs `cyl`
+_ ¿Qué pasa si haces un scatterplot de `class` vs `drv`?
+
+```{r}
+#1
+ggplot(mpg)
+#2
+nrow(mtcars)
+ncol(mtcars)
+#3
+?mpg
+#4
+ggplot(mpg,aes(x = hwy, y = cyl)) + geom_point()
+#5
+ggplot(mpg,aes(x = class, y = drv)) + geom_point()
+```
+
+Podemos representar variables adicionales usando otras características estéticas (aesthetics) como forma, color o tamaño.
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, color = class)) + 
+  geom_point()
+```
+
+Ahora se prueba con otras variables estéticas.
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, size = class)) + 
+  geom_point()
+```
+
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, shape = class)) + 
+  geom_point()
+```
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, alpha = class)) + 
+  geom_point()
+```
+
+Se aprecia que no hay suficientes figuras para todos los valores de `class` `ggplot` 6 figuras. En estos casos se recomienda usar otra opción.
+
+Agregando valores estéticos podemos graficar hasta 5 variables en una sola gráfica.
+
+```{r}
+ggplot(mtcars, aes(x=mpg, y = hp))+
+  geom_point(aes(color=factor(cyl), size=wt, shape = factor(am))) 
+```
+
+
+
+
+
